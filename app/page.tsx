@@ -28,29 +28,10 @@ export default function Home() {
       const formData = new FormData();
       formData.append('file', file);
 
-      // Upload and parse PDF
-      const uploadResponse = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json();
-        throw new Error(errorData.error || 'Upload failed');
-      }
-
-      const uploadData = await uploadResponse.json();
-
-      // Analyze with AI
+      // Analyze with AI (now handles PDF parsing directly)
       const analyzeResponse = await fetch('/api/analyze', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          textContent: uploadData.textContent,
-          documentType: 'AGB'
-        }),
+        body: formData,
       });
 
       if (!analyzeResponse.ok) {
@@ -59,7 +40,29 @@ export default function Home() {
       }
 
       const analyzeData = await analyzeResponse.json();
-      setSummary(analyzeData.summary);
+      
+      // Format the structured response for display
+      if (analyzeData.clauses && analyzeData.overall_summary) {
+        let formattedSummary = `## Gesamtübersicht\n${analyzeData.overall_summary}\n\n`;
+        
+        if (analyzeData.clauses.length > 0) {
+          formattedSummary += `## Wichtige Klauseln\n`;
+          analyzeData.clauses.forEach((clause: any) => {
+            formattedSummary += `\n**${clause.type}** (Risiko: ${clause.risk_level})\n`;
+            formattedSummary += `${clause.summary}\n`;
+          });
+        }
+        
+        if (analyzeData.disclaimer) {
+          formattedSummary += `\n## Hinweis\n${analyzeData.disclaimer}`;
+        }
+        
+        setSummary(formattedSummary);
+      } else if (analyzeData.error) {
+        setError(analyzeData.error);
+      } else {
+        setSummary(JSON.stringify(analyzeData, null, 2));
+      }
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -111,13 +114,30 @@ export default function Home() {
 
         {summary && (
           <div className="mt-6 p-4 bg-white border rounded-lg text-left">
-            <h3 className="font-bold text-lg mb-3">Zusammenfassung:</h3>
+            <h3 className="font-bold text-lg mb-3">AGB-Analyse:</h3>
             <div className="prose prose-sm max-w-none">
-              {summary.split('\n').map((line, index) => (
-                <p key={index} className="mb-2">
-                  {line}
-                </p>
-              ))}
+              {summary.split('\n').map((line, index) => {
+                if (line.startsWith('##')) {
+                  return (
+                    <h4 key={index} className="font-bold text-base mt-4 mb-2 text-gray-800">
+                      {line.replace('##', '')}
+                    </h4>
+                  );
+                } else if (line.startsWith('**') && line.endsWith('**')) {
+                  return (
+                    <h5 key={index} className="font-semibold text-sm mt-3 mb-1 text-gray-700">
+                      {line.replace(/\*\*/g, '')}
+                    </h5>
+                  );
+                } else if (line.trim()) {
+                  return (
+                    <p key={index} className="mb-2 text-sm leading-relaxed">
+                      {line}
+                    </p>
+                  );
+                }
+                return null;
+              })}
             </div>
           </div>
         )}
