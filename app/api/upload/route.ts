@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.js";
+import * as pdfjsLib from "pdfjs-dist";
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
 
 
+    // Set workerSrc for server environment
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
     // Parse PDF content using pdfjs-dist
     const loadingTask = pdfjsLib.getDocument({ data: buffer });
     const pdfDoc = await loadingTask.promise;

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.js";
+import * as pdfjsLib from "pdfjs-dist";
 
 // Force runtime instead of build-time execution
 export const dynamic = "force-dynamic";
@@ -32,6 +32,8 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(await file.arrayBuffer());
 
 
+    // Set workerSrc for server environment
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
     // Extract text from PDF using pdfjs-dist
     const loadingTask = pdfjsLib.getDocument({ data: buffer });
     const pdfDoc = await loadingTask.promise;
