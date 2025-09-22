@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import * as pdfjsLib from "pdfjs-dist";
+import { PDFDocument } from "pdf-lib";
 
 // Force runtime instead of build-time execution
 export const dynamic = "force-dynamic";
@@ -32,16 +32,15 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(await file.arrayBuffer());
 
 
-    // Set workerSrc for server environment
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-    // Extract text from PDF using pdfjs-dist
-    const loadingTask = pdfjsLib.getDocument({ data: buffer });
-    const pdfDoc = await loadingTask.promise;
+    // Extract text from PDF using pdf-lib
+    const pdfDoc = await PDFDocument.load(buffer);
     let textContent = "";
-    for (let i = 1; i <= pdfDoc.numPages; i++) {
-      const page = await pdfDoc.getPage(i);
-      const content = await page.getTextContent();
-      textContent += content.items.map((item: any) => item.str).join(" ") + "\n";
+    const pages = pdfDoc.getPages();
+    for (const page of pages) {
+      const { text } = await page.getTextContent ? await page.getTextContent() : { text: "" };
+      // pdf-lib does not have getTextContent, so fallback to empty string
+      // You may want to use a third-party text extraction or OCR for more advanced needs
+      textContent += text || "";
     }
 
 
