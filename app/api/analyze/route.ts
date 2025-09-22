@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import pdf from "pdf-parse";
 
+// Force runtime instead of build-time execution
+export const dynamic = "force-dynamic";
+
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -17,31 +20,45 @@ Use only: cancellation_period, auto_renewal, withdrawal_right, warranty, liabili
 `;
 
 export async function POST(req: Request) {
-  const formData = await req.formData();
-  const file = formData.get("file") as File | null;
-
-  if (!file) {
-    return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-  }
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const text = await pdf(buffer);
-
-  const completion = await client.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: text.text.slice(0, 6000) },
-    ],
-    temperature: 0,
-  });
-
-  let result;
   try {
-    result = JSON.parse(completion.choices[0].message?.content || "{}");
-  } catch (err) {
-    result = { error: "Parsing JSON failed", raw: completion.choices[0].message?.content };
-  }
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
 
-  return NextResponse.json(result);
+    if (!file) {
+      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    }
+
+    // Read uploaded file into buffer
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    // Extract text from PDF
+    const text = await pdf(buffer);
+
+    // Send first ~6000 chars to GPT to stay under token limit
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: text.text.slice(0, 6000) },
+      ],
+      temperature: 0,
+    });
+
+    let result;
+    try {
+      result = JSON.parse(completion.choices[0].message?.content || "{}");
+    } catch (err) {
+      result = {
+        error: "Parsing JSON failed",
+        raw: completion.choices[0].message?.content,
+      };
+    }
+
+    return NextResponse.json(result);
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: "Something went wrong", details: error.message },
+      { status: 500 }
+    );
+  }
 }
