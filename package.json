@@ -9,9 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/pdfjs-dist": "^2.10.377",
     "next": "^14.0.0",
     "openai": "^5.22.0",
-    "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^5.4.149",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },

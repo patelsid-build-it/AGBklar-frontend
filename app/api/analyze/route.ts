@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import pdf from "pdf-parse";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.js";
 
 // Force runtime instead of build-time execution
 export const dynamic = "force-dynamic";
@@ -31,15 +31,24 @@ export async function POST(req: Request) {
     // Read uploaded file into buffer
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Extract text from PDF
-    const text = await pdf(buffer);
+
+    // Extract text from PDF using pdfjs-dist
+    const loadingTask = pdfjsLib.getDocument({ data: buffer });
+    const pdfDoc = await loadingTask.promise;
+    let textContent = "";
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      const page = await pdfDoc.getPage(i);
+      const content = await page.getTextContent();
+      textContent += content.items.map((item: any) => item.str).join(" ") + "\n";
+    }
+
 
     // Send first ~6000 chars to GPT to stay under token limit
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: text.text.slice(0, 6000) },
+        { role: "user", content: textContent.slice(0, 6000) },
       ],
       temperature: 0,
     });
