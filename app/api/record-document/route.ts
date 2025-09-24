@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "../../lib/supabaseAdmin";
-
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 // helper: start of current month (billing)
 function getMonthStartISO() {
   const d = new Date();
