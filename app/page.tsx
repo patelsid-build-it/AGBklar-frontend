@@ -1,46 +1,17 @@
-"use client";
-import { useState } from "react";
-
 export default function Home() {
-  const [summary, setSummary] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-
-  async function handleUpload(e: any) {
-    e.preventDefault();
-    setLoading(true);
-    const formData = new FormData();
-    formData.append("file", e.target.file.files[0]);
-
-    const res = await fetch("/api/analyze", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await res.json();
-    setSummary(data);
-    setLoading(false);
-  }
-
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
-      <h1 className="text-3xl font-bold mb-4">AGBKlar.de</h1>
-      <form onSubmit={handleUpload} className="flex flex-col items-center gap-4">
-        <input type="file" name="file" accept=".pdf,.txt" required />
-        <button type="submit" className="px-4 py-2 bg-black text-white rounded-lg">
-          Analyse hochladen
-        </button>
-      </form>
-
-      {loading && <p className="mt-4">Analysiere Dokument... ⏳</p>}
-
-      {summary && (
-        <div className="mt-6 p-4 border w-full max-w-xl text-left bg-white shadow">
-          <h2 className="font-bold mb-2">Zusammenfassung</h2>
-          <pre className="whitespace-pre-wrap text-sm">
-            {JSON.stringify(summary, null, 2)}
-          </pre>
-        </div>
-      )}
-    </main>
+    <div className="text-center py-16">
+      <h1 className="text-4xl font-bold mb-4">AGBklar — Verträge verstehen</h1>
+      <p className="text-lg text-gray-600 mb-6">
+        Lade deine AGB hoch und erhalte eine verständliche Zusammenfassung mit Risikohinweisen.
+      </p>
+      <div className="flex justify-center gap-3">
+        <a href="/upload" className="px-6 py-3 bg-black text-white rounded-md">Upload & Analyse</a>
+        <a href="/register" className="px-6 py-3 border rounded-md">Anmelden</a>
+      </div>
+      <p className="mt-8 text-sm text-gray-500">
+        Freemium: 5 Dokumente kostenlos — Pro: 4.99€/Monat (100 Dokumente)
+      </p>
+    </div>
   );
 }
