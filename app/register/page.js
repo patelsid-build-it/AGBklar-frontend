@@ -1,43 +1,31 @@
-"use client";
-import { useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
-
-export default function Register() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  async function handleEmailSignup(e) {
-    e.preventDefault();
-    const { error } = await supabase.auth.signUp({
-      email,
-      password
-    }, { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/` });
-
-    if (error) alert(error.message);
-    else alert("Check your email for confirmation link.");
-  }
-
-  async function handleGoogle() {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/` }
-    });
-    if (error) alert(error.message);
-  }
-
+// app/privacy/page.jsx
+export default function Privacy() {
   return (
-    <div className="max-w-md mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Create account</h1>
-      <form onSubmit={handleEmailSignup} className="flex flex-col gap-3">
-        <input required type="email" placeholder="Email" value={email}
-          onChange={(e) => setEmail(e.target.value)} className="p-2 border"/>
-        <input required type="password" placeholder="Password" value={password}
-          onChange={(e) => setPassword(e.target.value)} className="p-2 border"/>
-        <button className="p-2 bg-black text-white">Sign up</button>
-      </form>
-      <div className="mt-4">
-        <button onClick={handleGoogle} className="p-2 border">Sign up with Google</button>
-      </div>
+    <div>
+      <h1 className="text-2xl font-bold mb-4">Datenschutzerklärung</h1>
+      <p className="mb-2">
+        Wir verarbeiten personenbezogene Daten gemäß DSGVO. Diese Seite beschreibt welche Daten wir verarbeiten und zu welchen Zwecken.
+      </p>
+
+      <h2 className="font-semibold mt-4">1. Verantwortlicher</h2>
+      <p>AGBklar — Ansprechpartner: support@agbklar.de</p>
+
+      <h2 className="font-semibold mt-4">2. Zweck der Verarbeitung</h2>
+      <p>
+        Verarbeitung von Account-Informationen, Speicherung von anonymisierten Analysen. Roh-PDFs werden nur mit ausdrücklicher Zustimmung gespeichert.
+      </p>
+
+      <h2 className="font-semibold mt-4">3. Rechtsgrundlage</h2>
+      <p>Art.6(1)(b) DSGVO für Vertragsabwicklung; Art.6(1)(a) für Einwilligung.</p>
+
+      <h2 className="font-semibold mt-4">4. Rechte der betroffenen Personen</h2>
+      <p>
+        Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Datenübertragbarkeit. Kontakt: support@agbklar.de
+      </p>
+
+      <p className="mt-4 text-sm text-gray-500">
+        Diese Datenschutzerklärung ist eine Vorlage. Bitte anpassen und ggf. juristisch prüfen.
+      </p>
     </div>
   );
 }
